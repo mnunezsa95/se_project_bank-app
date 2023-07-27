@@ -78,3 +78,16 @@ const displayMovements = function (movements) {
 };
 
 displayMovements(account1.movements);
+
+// Function to compute username --> adding a new property to the object for the username
+const createUsernames = function (accounts) {
+  accounts.forEach((acc) => {
+    acc.username = acc.owner
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word[0])
+      .join("");
+  });
+};
+
+createUsernames(accounts);
