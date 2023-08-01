@@ -76,8 +76,16 @@ const displayMovements = function (movements) {
     containerMovements.insertAdjacentHTML("afterbegin", html);
   });
 };
-
 displayMovements(account1.movements);
+
+// Function to add up the balance and display the balance on the UI
+const calcDisplayBalance = (movements) => {
+  const balance = movements.reduce((acc, movement) => {
+    return acc + movement;
+  }, 0);
+  labelBalance.textContent = `${balance} EUR`;
+};
+calcDisplayBalance(account1.movements);
 
 // Function to compute username --> adding a new property to the object for the username
 const createUsernames = function (accounts) {
