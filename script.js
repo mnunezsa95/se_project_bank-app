@@ -70,7 +70,7 @@ const displayMovements = function (movements) {
       <div class="movements__row">
         <div class="movements__type movements__type--${movementType}">${index + 1} ${movementType}</div>
         <div class="movements__date">3 days ago</div>
-        <div class="movements__value">${movement}€</div>
+        <div class="movements__value">${movement} €</div>
       </div>
     `;
     containerMovements.insertAdjacentHTML("afterbegin", html);
@@ -83,9 +83,40 @@ const calcDisplayBalance = (movements) => {
   const balance = movements.reduce((acc, movement) => {
     return acc + movement;
   }, 0);
-  labelBalance.textContent = `${balance} EUR`;
+  labelBalance.textContent = `${balance} €`;
 };
 calcDisplayBalance(account1.movements);
+
+// Function to display total in/out summary & interest summary
+const calcDisplaySummary = (movements) => {
+  const incomes = movements
+    .filter((mov) => mov > 0)
+    .reduce((acc, mov) => {
+      return acc + mov;
+    }, 0);
+  labelSumIn.textContent = `${incomes} €`;
+
+  const out = movements
+    .filter((mov) => mov < 0)
+    .reduce((acc, mov) => {
+      return acc + mov;
+    }, 0);
+  labelSumOut.textContent = `${Math.abs(out)} €`;
+
+  const interest = movements
+    .filter((mov) => mov > 0)
+    .map((deposit) => (deposit * 1.2) / 100)
+    .filter((int, i, arr) => {
+      console.log(i, arr);
+      return int >= 1;
+    })
+    .reduce((acc, int) => {
+      return acc + int;
+    }, 0);
+  labelSumInterest.textContent = `${interest} €`;
+};
+
+calcDisplaySummary(account1.movements);
 
 // Function to compute username --> adding a new property to the object for the username
 const createUsernames = function (accounts) {
