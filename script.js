@@ -1,9 +1,8 @@
 "use strict";
 
-/////////////////////////////////////////////////
-// Bank APP
-
-// Data
+/* ---------------------------------------------------------------------------------------------- */
+/*                                              Data                                              */
+/* ---------------------------------------------------------------------------------------------- */
 const account1 = {
   owner: "Jonas Schmedtmann",
   movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
@@ -34,7 +33,9 @@ const account4 = {
 
 const accounts = [account1, account2, account3, account4];
 
-// Elements;
+/* ---------------------------------------------------------------------------------------------- */
+/*                                            Elements                                            */
+/* ---------------------------------------------------------------------------------------------- */
 const labelWelcome = document.querySelector(".welcome");
 const labelDate = document.querySelector(".date");
 const labelBalance = document.querySelector(".balance__value");
@@ -76,38 +77,36 @@ const displayMovements = function (movements) {
     containerMovements.insertAdjacentHTML("afterbegin", html);
   });
 };
-displayMovements(account1.movements);
 
 // Function to add up the balance and display the balance on the UI
-const calcDisplayBalance = (movements) => {
-  const balance = movements.reduce((acc, movement) => {
+const calcDisplayBalance = (acc) => {
+  const balance = acc.movements.reduce((acc, movement) => {
     return acc + movement;
   }, 0);
-  labelBalance.textContent = `${balance} €`;
+  acc.balance = balance;
+  labelBalance.textContent = `${acc.balance} €`;
 };
-calcDisplayBalance(account1.movements);
 
 // Function to display total in/out summary & interest summary
-const calcDisplaySummary = (movements) => {
-  const incomes = movements
+const calcDisplaySummary = (acc) => {
+  const incomes = acc.movements
     .filter((mov) => mov > 0)
     .reduce((acc, mov) => {
       return acc + mov;
     }, 0);
   labelSumIn.textContent = `${incomes} €`;
 
-  const out = movements
+  const out = acc.movements
     .filter((mov) => mov < 0)
     .reduce((acc, mov) => {
       return acc + mov;
     }, 0);
   labelSumOut.textContent = `${Math.abs(out)} €`;
 
-  const interest = movements
+  const interest = acc.movements
     .filter((mov) => mov > 0)
-    .map((deposit) => (deposit * 1.2) / 100)
+    .map((deposit) => (deposit * acc.interestRate) / 100)
     .filter((int, i, arr) => {
-      console.log(i, arr);
       return int >= 1;
     })
     .reduce((acc, int) => {
@@ -116,17 +115,60 @@ const calcDisplaySummary = (movements) => {
   labelSumInterest.textContent = `${interest} €`;
 };
 
-calcDisplaySummary(account1.movements);
-
 // Function to compute username --> adding a new property to the object for the username
-const createUsernames = function (accounts) {
-  accounts.forEach((acc) => {
+const createUsernames = function (accs) {
+  accs.forEach(function (acc) {
     acc.username = acc.owner
       .toLowerCase()
       .split(" ")
-      .map((word) => word[0])
+      .map((name) => name[0])
       .join("");
   });
 };
 
+// Calling function to create usernames
 createUsernames(accounts);
+
+// Function for updating UI
+const updateUI = (acc) => {
+  displayMovements(acc.movements); // Display movements
+  calcDisplayBalance(acc); // Display balance
+  calcDisplaySummary(acc); // Display summary
+};
+
+// Event Handler for Logging In
+let currentAccount;
+btnLogin.addEventListener("click", function (e) {
+  e.preventDefault(); // Prevent form from submitting
+
+  //
+  currentAccount = accounts.find((acc) => {
+    return acc.username === inputLoginUsername.value;
+  });
+
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    // Display UI & welcome message & clear input fields
+    labelWelcome.textContent = `Welcome back, ${currentAccount.owner.split(" ")[0]}`;
+    containerApp.style.opacity = 100;
+    inputLoginPin.value = "";
+    inputLoginUsername.value = "";
+    inputLoginUsername.blur();
+    inputLoginPin.blur();
+    updateUI(currentAccount);
+  }
+});
+
+// Event Handler for transferring money
+btnTransfer.addEventListener("click", (evt) => {
+  evt.preventDefault();
+  const amount = Number(inputTransferAmount.value);
+  const receiverAccount = accounts.find((acc) => {
+    return acc.username === inputTransferTo.value;
+  });
+  if (amount > 0 && receiverAccount && currentAccount.balance >= amount && receiverAccount?.username !== currentAccount.username) {
+    currentAccount.movements.push(-amount);
+    receiverAccount.movements.push(amount);
+    updateUI(currentAccount);
+  }
+  inputTransferAmount.value = inputTransferTo.value = "";
+});
