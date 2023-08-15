@@ -172,3 +172,16 @@ btnTransfer.addEventListener("click", (evt) => {
   }
   inputTransferAmount.value = inputTransferTo.value = "";
 });
+
+// Handler to delete account
+btnClose.addEventListener("click", (evt) => {
+  evt.preventDefault();
+  if (inputCloseUsername.value === currentAccount.username && Number(inputClosePin.value) === currentAccount.pin) {
+    const accountIndex = accounts.findIndex((acc) => {
+      return acc.username === currentAccount.username;
+    });
+    accounts.splice(accountIndex, 1); // Deletes user account
+    containerApp.style.opacity = 0; // logs out after deleting
+  }
+  inputCloseUsername.value = inputClosePin.value = ""; // clear input fields
+});
