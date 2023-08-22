@@ -173,6 +173,17 @@ btnTransfer.addEventListener("click", (evt) => {
   inputTransferAmount.value = inputTransferTo.value = "";
 });
 
+// Handler for loaning
+btnLoan.addEventListener("click", (evt) => {
+  evt.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+  if (amount > 0 && currentAccount.movements.some((mov) => mov >= amount * 0.1)) {
+    currentAccount.movements.push(amount);
+    updateUI(currentAccount);
+  }
+  inputLoanAmount.value = "";
+});
+
 // Handler to delete account
 btnClose.addEventListener("click", (evt) => {
   evt.preventDefault();
