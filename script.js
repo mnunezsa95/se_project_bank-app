@@ -73,7 +73,7 @@ const displayMovements = function (movements, sort = false) {
       <div class="movements__row">
         <div class="movements__type movements__type--${movementType}">${index + 1} ${movementType}</div>
         <div class="movements__date">3 days ago</div>
-        <div class="movements__value">${movement} €</div>
+        <div class="movements__value">${movement.toFixed(2)} €</div>
       </div>
     `;
     containerMovements.insertAdjacentHTML("afterbegin", html);
@@ -86,7 +86,7 @@ const calcDisplayBalance = (acc) => {
     return acc + movement;
   }, 0);
   acc.balance = balance;
-  labelBalance.textContent = `${acc.balance} €`;
+  labelBalance.textContent = `${acc.balance.toFixed(2)} €`;
 };
 
 // Function to display total in/out summary & interest summary
@@ -96,14 +96,14 @@ const calcDisplaySummary = (acc) => {
     .reduce((acc, mov) => {
       return acc + mov;
     }, 0);
-  labelSumIn.textContent = `${incomes} €`;
+  labelSumIn.textContent = `${incomes.toFixed(2)} €`;
 
   const out = acc.movements
     .filter((mov) => mov < 0)
     .reduce((acc, mov) => {
       return acc + mov;
     }, 0);
-  labelSumOut.textContent = `${Math.abs(out)} €`;
+  labelSumOut.textContent = `${Math.abs(out).toFixed(2)} €`;
 
   const interest = acc.movements
     .filter((mov) => mov > 0)
@@ -114,7 +114,7 @@ const calcDisplaySummary = (acc) => {
     .reduce((acc, int) => {
       return acc + int;
     }, 0);
-  labelSumInterest.textContent = `${interest} €`;
+  labelSumInterest.textContent = `${interest.toFixed(2)} €`;
 };
 
 // Function to compute username --> adding a new property to the object for the username
@@ -178,7 +178,7 @@ btnTransfer.addEventListener("click", (evt) => {
 // Handler for loaning
 btnLoan.addEventListener("click", (evt) => {
   evt.preventDefault();
-  const amount = Number(inputLoanAmount.value);
+  const amount = Math.floor(inputLoanAmount.value);
   if (amount > 0 && currentAccount.movements.some((mov) => mov >= amount * 0.1)) {
     currentAccount.movements.push(amount);
     updateUI(currentAccount);
