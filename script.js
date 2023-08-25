@@ -92,13 +92,14 @@ const displayMovements = function (acc, sort = false) {
   movs.forEach(function (movement, index) {
     const movementType = movement > 0 ? "deposit" : "withdrawal";
     const date = new Date(acc.movementsDates[index]);
-    const displayDate = formatMovementDate(date);
+    const displayDate = formatMovementDate(date, acc.locale);
+    const formattedMovement = formatCurrency(movement, acc.locale, acc.currency);
 
     const html = `
       <div class="movements__row">
         <div class="movements__type movements__type--${movementType}">${index + 1} ${movementType}</div>
         <div class="movements__date">${displayDate}</div>
-        <div class="movements__value">${movement.toFixed(2)} €</div>
+        <div class="movements__value">${formattedMovement}</div>
       </div>
     `;
     containerMovements.insertAdjacentHTML("afterbegin", html);
@@ -110,8 +111,7 @@ const calcDisplayBalance = (acc) => {
   const balance = acc.movements.reduce((acc, movement) => {
     return acc + movement;
   }, 0);
-  acc.balance = balance;
-  labelBalance.textContent = `${acc.balance.toFixed(2)} €`;
+  labelBalance.textContent = `${formatCurrency(balance, acc.locale, acc.currency)}`;
 };
 
 // Function to display total in/out summary & interest summary
@@ -121,14 +121,14 @@ const calcDisplaySummary = (acc) => {
     .reduce((acc, mov) => {
       return acc + mov;
     }, 0);
-  labelSumIn.textContent = `${incomes.toFixed(2)} €`;
+  labelSumIn.textContent = `${formatCurrency(incomes, acc.locale, acc.currency)}`;
 
   const out = acc.movements
     .filter((mov) => mov < 0)
     .reduce((acc, mov) => {
       return acc + mov;
     }, 0);
-  labelSumOut.textContent = `${Math.abs(out).toFixed(2)} €`;
+  labelSumOut.textContent = `${formatCurrency(Math.abs(out), acc.locale, acc.currency)}`;
 
   const interest = acc.movements
     .filter((mov) => mov > 0)
@@ -139,7 +139,7 @@ const calcDisplaySummary = (acc) => {
     .reduce((acc, int) => {
       return acc + int;
     }, 0);
-  labelSumInterest.textContent = `${interest.toFixed(2)} €`;
+  labelSumInterest.textContent = `${formatCurrency(incomes, acc.locale, acc.currency)}`;
 };
 
 // Function to compute username --> adding a new property to the object for the username
@@ -178,12 +178,15 @@ btnLogin.addEventListener("click", function (e) {
     containerApp.style.opacity = 100;
 
     const currentDate = new Date();
-    const day = `${currentDate.getDate()}`.padStart(2, 0);
-    const month = `${currentDate.getMonth() + 1}`.padStart(2, 0);
-    const year = currentDate.getFullYear();
-    const hour = currentDate.getHours();
-    const min = currentDate.getMinutes();
-    labelDate.textContent = `${day}/${month}/${year}, ${hour}:${min}`;
+    const dateOptions = {
+      hour: "numeric",
+      minute: "numeric",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      weekday: "long",
+    };
+    labelDate.textContent = new Intl.DateTimeFormat(currentAccount.locale, dateOptions).format(currentDate);
 
     inputLoginPin.value = "";
     inputLoginUsername.value = "";
@@ -247,19 +250,21 @@ btnSort.addEventListener("click", (evt) => {
   sorted = !sorted;
 });
 
-const formatMovementDate = (date) => {
+const formatMovementDate = (date, locale) => {
   const calcDaysPassed = (date1, date2) => {
     return Math.round(Math.abs((date2 - date1) / (1000 * 60 * 60 * 24)));
   };
   const daysPassed = calcDaysPassed(new Date(), date);
-  console.log(daysPassed);
   if (daysPassed === 0) return "Today";
   if (daysPassed === 1) return "Yesterday";
   if (daysPassed <= 7) return `${daysPassed} days ago`;
-  else {
-    const month = `${date.getMonth() + 1}`.padStart(2, 0);
-    const year = date.getFullYear();
-    const day = `${date.getDate()}`.padStart(2, 0);
-    return `${day}/${month}/${year}`;
-  }
+  return new Intl.DateTimeFormat(locale).format(date);
+};
+
+const formatCurrency = (value, locale, currency) => {
+  const currencyOptions = {
+    style: "currency",
+    currency: currency,
+  };
+  return new Intl.NumberFormat(locale, currencyOptions).format(value);
 };
