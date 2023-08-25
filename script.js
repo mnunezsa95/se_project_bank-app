@@ -85,6 +85,10 @@ const inputLoanAmount = document.querySelector(".form__input--loan-amount");
 const inputCloseUsername = document.querySelector(".form__input--user");
 const inputClosePin = document.querySelector(".form__input--pin");
 
+/* ---------------------------------------------------------------------------------------------- */
+/*                                            Functions                                           */
+/* ---------------------------------------------------------------------------------------------- */
+
 // Function to show array of movements
 const displayMovements = function (acc, sort = false) {
   containerMovements.innerHTML = ""; // resetting the container
@@ -111,6 +115,7 @@ const calcDisplayBalance = (acc) => {
   const balance = acc.movements.reduce((acc, movement) => {
     return acc + movement;
   }, 0);
+  currentAccount.balance = balance;
   labelBalance.textContent = `${formatCurrency(balance, acc.locale, acc.currency)}`;
 };
 
@@ -139,7 +144,7 @@ const calcDisplaySummary = (acc) => {
     .reduce((acc, int) => {
       return acc + int;
     }, 0);
-  labelSumInterest.textContent = `${formatCurrency(incomes, acc.locale, acc.currency)}`;
+  labelSumInterest.textContent = `${formatCurrency(interest, acc.locale, acc.currency)}`;
 };
 
 // Function to compute username --> adding a new property to the object for the username
@@ -153,6 +158,25 @@ const createUsernames = function (accs) {
   });
 };
 
+// Function for creating timer
+const startLogOutTimer = () => {
+  let time = 30;
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60);
+    labelTimer.textContent = `${min}:${sec}`;
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = "Login to get started";
+      containerApp.style.opacity = 0;
+    }
+    time--; // reduce one second every function call
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+};
+
 // Calling function to create usernames
 createUsernames(accounts);
 
@@ -163,17 +187,18 @@ const updateUI = (acc) => {
   calcDisplaySummary(acc); // Display summary
 };
 
-// Event Handler for Logging In
+// global variables
 let currentAccount;
+let timer;
+
+// Event Handler for Logging In
 btnLogin.addEventListener("click", function (e) {
   e.preventDefault(); // Prevent form from submitting
-
   currentAccount = accounts.find((acc) => {
     return acc.username === inputLoginUsername.value;
   });
-
+  // Display UI & welcome message & clear input fields & set date
   if (currentAccount?.pin === Number(inputLoginPin.value)) {
-    // Display UI & welcome message & clear input fields & set date
     labelWelcome.textContent = `Welcome back, ${currentAccount.owner.split(" ")[0]}`;
     containerApp.style.opacity = 100;
 
@@ -192,6 +217,8 @@ btnLogin.addEventListener("click", function (e) {
     inputLoginUsername.value = "";
     inputLoginUsername.blur();
     inputLoginPin.blur();
+    if (timer) clearInterval(timer); // clearing any timer that might be running
+    timer = startLogOutTimer();
     updateUI(currentAccount);
   }
 });
@@ -199,21 +226,25 @@ btnLogin.addEventListener("click", function (e) {
 // Event Handler for transferring money
 btnTransfer.addEventListener("click", (evt) => {
   evt.preventDefault();
-  const amount = Number(inputTransferAmount.value);
-  const receiverAccount = accounts.find((acc) => {
-    return acc.username === inputTransferTo.value;
-  });
-  if (amount > 0 && receiverAccount && currentAccount.balance >= amount && receiverAccount?.username !== currentAccount.username) {
+
+  const amount = +inputTransferAmount.value;
+  const receiverAcc = accounts.find((acc) => acc.username === inputTransferTo.value);
+  if (amount > 0 && receiverAcc && currentAccount.balance >= amount && receiverAcc?.username !== currentAccount.username) {
+    // Doing the transfer
+
     currentAccount.movements.push(-amount);
-    receiverAccount.movements.push(amount);
+    receiverAcc.movements.push(amount);
 
     // Add transfer date
     currentAccount.movementsDates.push(new Date().toISOString());
-    receiverAccount.movementsDates.push(new Date().toISOString());
+    receiverAcc.movementsDates.push(new Date().toISOString());
 
+    // Update UI
     updateUI(currentAccount);
   }
   inputTransferAmount.value = inputTransferTo.value = "";
+  clearInterval(timer);
+  timer = startLogOutTimer();
 });
 
 // Handler for loaning
@@ -226,6 +257,8 @@ btnLoan.addEventListener("click", (evt) => {
       // Add loan date
       currentAccount.movementsDates.push(new Date().toISOString());
       updateUI(currentAccount);
+      clearInterval(timer);
+      timer = startLogOutTimer();
     }, 3000);
   }
   inputLoanAmount.value = "";
