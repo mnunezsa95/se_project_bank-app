@@ -10,7 +10,7 @@
 - Copyright
 - Plans for Improvement
 
-### Intro - About the project
+## Intro - About the project
 
 The Bank App enables users to log in with their username and pin (refer to the credentials section for demo credentials). Upon login, the user's financial information is presented in a sleek and simple format, showcasing their latest deposits and withdrawals. Users can then choose from various actionable options, including transferring money to another account, requesting a loan, or closing their account.
 
